@@ -1,0 +1,25 @@
+name: Build and Run Tests
+on:
+  workflow_call:
+    inputs:
+      run-tests:
+        description: 'Whether to also run unit tests where possible.'
+        default: true
+        required: false
+        type: boolean
+      update-caches:
+        description: 'Whether to update the `ccache` or `bazel` caches, where possible.'
+        default: false
+        required: false
+        type: boolean
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}-${{ inputs.update-caches }}
+  cancel-in-progress: true
+jobs:
+  cmake-windows-x64:
+    runs-on: windows-2022-32core
+    timeout-minutes: 60
+    steps:
+      - name: Check processor architecture
+        run: echo Processor architecture is $env:PROCESSOR_ARCHITECTURE
+        shell: pwsh
