@@ -23,3 +23,7 @@ jobs:
       - name: Check processor architecture
         run: echo Processor architecture is $env:PROCESSOR_ARCHITECTURE
         shell: pwsh
+    steps:
+      - name: Check number of processor cores
+        run: echo %NUMBER_OF_PROCESSORS%
+        shell: pwsh
