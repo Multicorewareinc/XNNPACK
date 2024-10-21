@@ -4,6 +4,7 @@ on:
   push:
     branches-ignore:
       - master
+      - xnnpack-test-infra
   workflow_dispatch:
 
 jobs:
