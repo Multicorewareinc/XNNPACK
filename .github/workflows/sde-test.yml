@@ -1,8 +1,421 @@
-name: Execute Windows (x86, x64) Tests with Intel SDE
+name: Execute Windows x64 Tests with Intel SDE
 
-on:
-  workflow_dispatch: # Allows manual trigger of the workflow
+on:      
+  workflow_dispatch:
+    inputs:
+      sde-processor:
+        description: "Pick a SDE CPU Processor to run tests"
+        required: true
+        type: choice
+        default: "ALL"
+        options:
+          - ALL
+          - Skylake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2)
+          - Cannon Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI)
+          - Ice Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)
+          - SkyLake server (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX)
+          - Cascade Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VNNI)
+          - Cooper Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VNNI)
+          - Ice Lake server (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)
+          - Tiger Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2 AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)
+          - Alder Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
+          - Meteor Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
+          - Raptor Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
+          - Sapphire Rapids Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI, AVX256VNNI, AVX256VNNIINT8, AVXVNNI)
+          - Emerald Rapids (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI, AVX256VNNI, AVX256VNNIINT8, AVXVNNI)
+          - Granite Rapids (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI, AVX256VNNI, AVX256VNNIINT8, AVXVNNI)
+          - Sierra Forest (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
+          - Arrow Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
+          - Lunar Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)
 
 jobs:
-  build-and-test:
-    uses: ./.github/workflows/build-windows.yml
+  build:
+    uses:  ./.github/workflows/build-windows.yml
+
+  test-sde-skl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Skylake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Skylake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -skl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-cnl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Cannon Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Cannon Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -cnl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-icl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Ice Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Ice Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -icl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-skx:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'SkyLake server (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE SkyLake server Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -skx -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-clx:
+    needs : build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Cascade Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VNNI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Cascade Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -clx -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-cpx:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Cooper Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VNNI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Cooper Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -cpx -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-icx:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Ice Lake server (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Ice Lake server Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -icx -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-tgl:
+    needs : build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Tiger Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2 AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Tiger Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -tgl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-adl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Alder Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Alder Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -adl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-mtl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Meteor Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Meteor Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -mtl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-rpl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Raptor Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Raptor Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -rpl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-spr:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Sapphire Rapids (Supports AVX512FP16)' || inputs.sde-processor == 'ALL' }}
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Sapphire Rapids Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -spr -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-emr:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Emerald Rapids (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI, AVX256VNNI, AVX256VNNIINT8, AVXVNNI)' || inputs.sde-processor == 'ALL' }}
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Emerald Rapids Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -emr -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-gnr:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Granite Rapids (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVX512F, AVX512SKX, AVX256SKX, AVX512VBMI, AVX512VNNI, AVX512VNNIGFNI, AVX256VNNI, AVX256VNNIINT8, AVXVNNI)' || inputs.sde-processor == 'ALL' }}
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Granite Rapids Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -gnr -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-srf:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Sierra Forest (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Sierra Forest Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -srf -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-arl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Arrow Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Arrow Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -arl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
+
+  test-sde-lnl:
+    needs: build
+    runs-on: windows-server-2022-32core
+    if: ${{ inputs.sde-processor == 'Lunar Lake (Supports SSE, SSE2, SSSE3, SSE41, AVX, F16C, FMA3, AVX2, AVXVNNI, AVXVNNIINT8)' || inputs.sde-processor == 'ALL' }}
+    timeout-minutes: 60
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-x64
+          path: build/windows/x64/
+      - name: Download Intel SDE using curl
+        run: |
+          curl -L -o sde-external-9.44.0-2024-08-22-win.tar.xz https://downloadmirror.intel.com/831748/sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Extract Intel SDE
+        shell: bash
+        run: |
+          tar -xf sde-external-9.44.0-2024-08-22-win.tar.xz
+      - name: Run tests using Intel SDE Lunar Lake Processor
+        run: |
+          ${{ github.workspace }}\sde-external-9.44.0-2024-08-22-win\sde.exe -lnl -- ctest -C Release --parallel $Env:NUMBER_OF_PROCESSORS
+        working-directory: ${{ github.workspace }}/build/windows/x64
